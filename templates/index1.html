@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Grid Pathfinding</title>
+<style>
+canvas { border:1px solid black; }
+</style>
+</head>
+<body>
+
+<h2>Click: Start → End → Walls</h2>
+<button onclick="mode='start'">Set Start</button>
+<button onclick="mode='end'">Set End</button>
+<button onclick="mode='wall'">Draw Wall</button>
+<button onclick="run()">Run</button>
+
+<br><br>
+<canvas id="cv" width="500" height="500"></canvas>
+
+<script>
+const N = 25;
+const SIZE = 20;
+
+let grid = Array.from({length:N},()=>Array(N).fill(0));
+let start=null, end=null;
+let mode="wall";
+
+const cv=document.getElementById("cv");
+const ctx=cv.getContext("2d");
+
+cv.onclick = e => {
+    const rect=cv.getBoundingClientRect();
+    const x=Math.floor((e.clientY-rect.top)/SIZE);
+    const y=Math.floor((e.clientX-rect.left)/SIZE);
+
+    if(mode==="start"){ start=[x,y]; }
+    else if(mode==="end"){ end=[x,y]; }
+    else grid[x][y]=1;
+
+    draw();
+};
+
+function draw(path=[]) {
+    ctx.clearRect(0,0,cv.width,cv.height);
+
+    for(let i=0;i<N;i++){
+        for(let j=0;j<N;j++){
+            if(grid[i][j]===1) ctx.fillStyle="black";
+            else ctx.fillStyle="white";
+            ctx.fillRect(j*SIZE,i*SIZE,SIZE,SIZE);
+            ctx.strokeRect(j*SIZE,i*SIZE,SIZE,SIZE);
+        }
+    }
+
+    if(start){
+        ctx.fillStyle="green";
+        ctx.fillRect(start[1]*SIZE,start[0]*SIZE,SIZE,SIZE);
+    }
+
+    if(end){
+        ctx.fillStyle="red";
+        ctx.fillRect(end[1]*SIZE,end[0]*SIZE,SIZE,SIZE);
+    }
+
+    ctx.fillStyle="blue";
+    for(const [x,y] of path){
+        ctx.fillRect(y*SIZE,x*SIZE,SIZE,SIZE);
+    }
+}
+
+async function run(){
+    if(!start || !end) return;
+
+    const res=await fetch("/run",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({grid,start,end})
+    });
+
+    const data=await res.json();
+    draw(data.path);
+}
+
+draw();
+</script>
+</body>
+</html>
