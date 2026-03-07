@@ -3,126 +3,909 @@
 <head>
     <title>Dijkstra Visualizer</title>
     <style>
-        canvas { border: 1px solid black; }
-        body { font-family: Arial; }
+        :root {
+            --bg: #f2f7f0;
+            --panel: #ffffff;
+            --ink: #1d2b23;
+            --muted: #516359;
+            --line: #d2e1d3;
+            --accent: #2f7a4f;
+            --accent-soft: #d8efdf;
+            --danger: #d65252;
+            --warn: #f0a21b;
+            --node: #6ec1e4;
+            --node-visit: #ffb84d;
+            --edge: #6f8174;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Trebuchet MS", "Tahoma", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 10%, #e0f0d8 0%, transparent 38%),
+                radial-gradient(circle at 88% 90%, #dceee6 0%, transparent 34%),
+                var(--bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 22px;
+        }
+
+        .shell {
+            width: min(1120px, 100%);
+            background: var(--panel);
+            border: 1px solid #dbe7d9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 14px 36px rgba(38, 56, 42, 0.15);
+        }
+
+        .header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e0ebdf;
+            background: linear-gradient(90deg, #edf8ee, #f9fcf7);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: 0.3px;
+        }
+
+        .header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            min-height: 620px;
+        }
+
+        .sidebar {
+            border-right: 1px solid #e6eee4;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .group {
+            border: 1px solid #e3ece1;
+            border-radius: 12px;
+            background: #fafdf8;
+            padding: 10px;
+        }
+
+        .group h3 {
+            margin: 0 0 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #4d6252;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .row > * {
+            min-width: 0;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 12px;
+            color: #506255;
+        }
+
+        input, textarea {
+            border: 1px solid #ccdbcd;
+            border-radius: 9px;
+            padding: 8px;
+            font-size: 14px;
+            font-family: "Consolas", "Courier New", monospace;
+            color: #1d2b23;
+            background: #fff;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 190px;
+            resize: vertical;
+            line-height: 1.4;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .buttons.single {
+            grid-template-columns: 1fr;
+        }
+
+        button {
+            border: 1px solid #c9d7c6;
+            background: #fff;
+            color: #223226;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform .1s ease, border-color .1s ease, background .1s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            border-color: #9fb79c;
+            background: #f4faf2;
+        }
+
+        button.primary {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        button.primary:hover {
+            background: #266541;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #667a6e;
+            line-height: 1.35;
+        }
+
+        .edge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 260px;
+            overflow: auto;
+            padding-right: 2px;
+        }
+
+        .edge-row,
+        .edge-head {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto auto;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .edge-head {
+            color: #5f7464;
+            font-size: 11px;
+            letter-spacing: 0.2px;
+            margin-bottom: 4px;
+        }
+
+        .edge-row input {
+            padding: 6px 7px;
+            font-size: 13px;
+        }
+
+        .mini {
+            padding: 6px 0;
+            min-width: 28px;
+            font-size: 15px;
+            line-height: 1;
+            font-weight: 700;
+        }
+
+        .mini.remove {
+            color: #7f2f2f;
+            border-color: #e3b9b9;
+            background: #fff5f5;
+        }
+
+        .mini.remove:hover {
+            background: #ffe9e9;
+            border-color: #d49292;
+        }
+
+        .random-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #506255;
+        }
+
+        .check-row input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            transform: translateY(0.5px);
+        }
+
+        .board {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            color: #425447;
+        }
+
+        .legend span::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .l-node::before { background: var(--node); }
+        .l-visit::before { background: var(--node-visit); }
+        .l-relax::before { background: var(--danger); }
+        .l-path::before { background: #00b050; }
+
+        #cv {
+            width: 100%;
+            height: auto;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fdfefd;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #304437;
+            min-height: 18px;
+        }
+
+        .distance {
+            border: 1px solid #e2ece0;
+            border-radius: 10px;
+            background: #fbfef9;
+            padding: 8px;
+            font-size: 13px;
+            color: #2d4135;
+            min-height: 38px;
+        }
+
+        .explain {
+            border: 1px solid #deeadf;
+            border-radius: 10px;
+            background: #f9fdf7;
+            padding: 10px;
+            min-height: 128px;
+        }
+
+        .explain .title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #32533f;
+            margin-bottom: 6px;
+        }
+
+        .explain .content {
+            font-size: 13px;
+            color: #2d4335;
+            line-height: 1.45;
+        }
+
+        .explain ul {
+            margin: 6px 0 0 18px;
+            padding: 0;
+        }
+
+        @media (max-width: 920px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e6eee4;
+            }
+        }
     </style>
 </head>
 <body>
+<div class="shell">
+    <div class="header">
+        <h1>Dijkstra Visualizer</h1>
+        <p>UI minh họa trực quan: mỗi cạnh đều hiển thị trọng số ngay trên đường nối.</p>
+    </div>
 
-<h1>Dijkstra Visualizer</h1>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="group">
+                <h3>Thông số đồ thị</h3>
+                <div class="row">
+                    <label>Số đỉnh
+                        <input id="n" type="number" min="2" value="5">
+                    </label>
+                    <label>Tốc độ (ms)
+                        <input id="speed" type="number" min="100" step="50" value="700">
+                    </label>
+                </div>
+                <div class="row" style="margin-top:8px;">
+                    <label>Đỉnh bắt đầu
+                        <input id="start" type="number" min="1" value="1">
+                    </label>
+                    <label>Đỉnh đích
+                        <input id="target" type="number" min="1" value="5">
+                    </label>
+                </div>
+            </div>
 
-<p>Số đỉnh:</p>
-<input id="n" type="number" value="5">
+            <div class="group">
+                <h3>Dữ liệu cạnh (u v w)</h3>
+                <div class="edge-head">
+                    <span>u</span>
+                    <span>v</span>
+                    <span>w</span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div id="edgeRows" class="edge-list"></div>
+                <div class="hint">Mỗi dòng là một cạnh: `u v w`. Bấm `+` để thêm nhanh, bấm `-` để xóa.</div>
+            </div>
 
-<p>Đỉnh bắt đầu:</p>
-<input id="start" type="number" value="1">
+            <div class="group">
+                <h3>Random đồ thị</h3>
+                <div class="random-grid">
+                    <label>Số cạnh ngẫu nhiên
+                        <input id="randomEdgeCount" type="number" min="1" value="6">
+                    </label>
+                    <label>Đỉnh nối tối đa
+                        <input id="randomMaxDegree" type="number" min="1" value="4">
+                    </label>
+                    <label>Trọng số min
+                        <input id="randomMinWeight" type="number" min="0" value="1">
+                    </label>
+                    <label>Trọng số max
+                        <input id="randomMaxWeight" type="number" min="1" value="12">
+                    </label>
+                </div>
+                <label class="check-row">
+                    <input id="ensureConnected" type="checkbox" checked>
+                    Ưu tiên đồ thị liên thông
+                </label>
+                <div class="buttons" style="margin-top:8px;">
+                    <button onclick="generateRandomGraph()">Random cạnh</button>
+                    <button onclick="randomizeStartTarget()">Random start/target</button>
+                </div>
+            </div>
 
-<p>Đỉnh đích:</p>
-<input id="target" type="number" value="5">
+            <div class="group">
+                <h3>Hành động</h3>
+                <div class="buttons single">
+                    <button class="primary" onclick="run()">Run</button>
+                </div>
+                <div class="hint" style="margin-top:8px;">Bạn có thể kéo thả trực tiếp các node trên canvas.</div>
+            </div>
+        </aside>
 
-<p>Cạnh (u v w mỗi dòng):</p>
-<textarea id="edges" rows="6" cols="40" >
-1 2 2
-1 3 4
-2 4 7
-3 5 1
-</textarea>
+        <section class="board">
+            <div class="legend">
+                <span class="l-node">Node</span>
+                <span class="l-visit">Visit</span>
+                <span class="l-relax">Relax edge</span>
+                <span class="l-path">Final shortest path</span>
+            </div>
 
-<br><br>
-<button onclick="run()">Run</button>
-
-<h3>Canvas</h3>
-<canvas id="cv" width="500" height="400"></canvas>
+            <canvas id="cv" width="760" height="560"></canvas>
+            <div class="status" id="status">Chưa chạy.</div>
+            <div class="distance" id="distInfo">Khoảng cách từng đỉnh sẽ hiển thị tại đây.</div>
+            <div class="explain" id="explainBox">
+                <div class="title">Giải thích đường đi ngắn nhất</div>
+                <div class="content" id="explainContent">Phần này sẽ giải thích kết quả sau khi chạy thuật toán.</div>
+            </div>
+        </section>
+    </div>
+</div>
 
 <script>
 const canvas = document.getElementById("cv");
 const ctx = canvas.getContext("2d");
+const statusEl = document.getElementById("status");
+const distInfoEl = document.getElementById("distInfo");
+const explainContentEl = document.getElementById("explainContent");
 
 let positions = {};
 let steps = [];
 let stepIndex = 0;
 let finalPath = [];
 let currentEdges = [];
+let finalDist = [];
+let animationToken = 0;
+let previewDebounceTimer = null;
+let draggingNodeId = null;
+let draggingPointerId = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
 
-function randomPos(n) {
+function setExplanation(html) {
+    explainContentEl.innerHTML = html;
+}
+
+function resetExplanation() {
+    setExplanation("Phần này sẽ giải thích kết quả sau khi chạy thuật toán.");
+}
+
+function edgeWeightMap(edges) {
+    const map = new Map();
+    for (const [u, v, w] of edges) {
+        const key = edgeCode(u, v);
+        if (!map.has(key) || w < map.get(key)) {
+            map.set(key, w);
+        }
+    }
+    return map;
+}
+
+function explainResult(start, target, path, dist, steps, edges) {
+    const visitCount = steps.filter(s => s.type === "visit").length;
+    const relaxCount = steps.filter(s => s.type === "relax").length;
+
+    if (!path || path.length === 0) {
+        setExplanation(`
+            Dijkstra bắt đầu từ đỉnh <b>${start}</b> và thử mở rộng dần ra các đỉnh gần nhất.
+            <ul>
+                <li>Đã visit <b>${visitCount}</b> đỉnh và relax <b>${relaxCount}</b> cạnh.</li>
+                <li>Không tồn tại đường đi từ <b>${start}</b> đến <b>${target}</b> trong đồ thị hiện tại.</li>
+            </ul>
+        `);
+        return;
+    }
+
+    const map = edgeWeightMap(edges);
+    const segments = [];
+    let sumWeight = 0;
+
+    for (let i = 0; i < path.length - 1; i++) {
+        const a = path[i];
+        const b = path[i + 1];
+        const key = edgeCode(a, b);
+        const w = map.get(key);
+        if (Number.isFinite(w)) {
+            sumWeight += w;
+            segments.push(`${a}->${b} (${w})`);
+        }
+    }
+
+    const distToTarget = dist[target - 1];
+    const finalCost = Number.isFinite(distToTarget) ? distToTarget : sumWeight;
+
+    setExplanation(`
+        Đường đi ngắn nhất vừa tìm được là: <b>${path.join(" -> ")}</b>.
+        <ul>
+            <li>Tổng trọng số đường đi: <b>${finalCost}</b>.</li>
+            <li>Chi tiết cộng trọng số: <b>${segments.join(" + ")}</b>.</li>
+            <li>Dijkstra hoạt động bằng cách luôn chọn đỉnh chưa xét có khoảng cách tạm thời nhỏ nhất, rồi cập nhật (relax) các đỉnh kề.</li>
+            <li>Trong lần chạy này: visit <b>${visitCount}</b> đỉnh, relax <b>${relaxCount}</b> cạnh.</li>
+        </ul>
+    `);
+}
+
+function setStatus(message) {
+    statusEl.textContent = message;
+}
+
+function parseEdgesFromRows(n) {
+    const rows = [...document.querySelectorAll("#edgeRows .edge-row")];
+    if (rows.length === 0) {
+        throw new Error("Cần ít nhất 1 cạnh.");
+    }
+
+    const edges = [];
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const u = Number(row.querySelector(".edge-u").value);
+        const v = Number(row.querySelector(".edge-v").value);
+        const w = Number(row.querySelector(".edge-w").value);
+
+        if ([u, v, w].some(Number.isNaN)) {
+            throw new Error(`Dòng ${i + 1} không hợp lệ. Cần đủ u, v, w.`);
+        }
+
+        if (w < 0) {
+            throw new Error(`Dòng ${i + 1}: Dijkstra không dùng trọng số âm.`);
+        }
+
+        if (!Number.isInteger(u) || !Number.isInteger(v) || u < 1 || v < 1 || u > n || v > n) {
+            throw new Error(`Dòng ${i + 1}: u và v phải nằm trong [1..${n}].`);
+        }
+
+        if (u === v) {
+            throw new Error(`Dòng ${i + 1}: không dùng cạnh tự nối (u = v).`);
+        }
+
+        edges.push([Math.trunc(u), Math.trunc(v), Math.trunc(w)]);
+    }
+    return edges;
+}
+
+function buildEdgeRow(u=1, v=2, w=1) {
+    const row = document.createElement("div");
+    row.className = "edge-row";
+    row.innerHTML = `
+        <input class="edge-u" type="number" min="1" value="${u}">
+        <input class="edge-v" type="number" min="1" value="${v}">
+        <input class="edge-w" type="number" min="0" value="${w}">
+        <button class="mini" title="Thêm dòng mới" onclick="addEdgeRowAfter(this)">+</button>
+        <button class="mini remove" title="Xóa dòng" onclick="removeEdgeRow(this)">-</button>
+    `;
+    return row;
+}
+
+function setEdgeRows(edges) {
+    const container = document.getElementById("edgeRows");
+    container.innerHTML = "";
+
+    for (const [u, v, w] of edges) {
+        container.appendChild(buildEdgeRow(u, v, w));
+    }
+
+    if (edges.length === 0) {
+        container.appendChild(buildEdgeRow(1, 2, 1));
+    }
+}
+
+function addEdgeRowAfter(btn) {
+    const row = btn.closest(".edge-row");
+    const next = buildEdgeRow(1, 2, 1);
+    row.insertAdjacentElement("afterend", next);
+    queuePreviewRefresh();
+}
+
+function removeEdgeRow(btn) {
+    const container = document.getElementById("edgeRows");
+    const rows = container.querySelectorAll(".edge-row");
+    if (rows.length <= 1) {
+        setStatus("Cần giữ lại ít nhất 1 dòng cạnh.");
+        return;
+    }
+
+    btn.closest(".edge-row").remove();
+    queuePreviewRefresh();
+}
+
+function queuePreviewRefresh() {
+    if (previewDebounceTimer) {
+        clearTimeout(previewDebounceTimer);
+    }
+    previewDebounceTimer = setTimeout(refreshPreviewFromInputs, 200);
+}
+
+function updateRandomEdgeBoundHint() {
+    const n = parseInt(document.getElementById("n").value, 10);
+    if (!Number.isInteger(n) || n < 2) {
+        return;
+    }
+
+    const maxEdges = (n * (n - 1)) / 2;
+    const input = document.getElementById("randomEdgeCount");
+    input.max = String(maxEdges);
+    if (Number(input.value) > maxEdges) {
+        input.value = String(maxEdges);
+    }
+}
+
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function edgeCode(a, b) {
+    return a < b ? `${a}-${b}` : `${b}-${a}`;
+}
+
+function generateRandomGraph() {
+    const n = parseInt(document.getElementById("n").value, 10);
+    if (!Number.isInteger(n) || n < 2) {
+        setStatus("Số đỉnh phải là số nguyên >= 2.");
+        return;
+    }
+
+    const maxEdges = (n * (n - 1)) / 2;
+    const desiredEdges = Math.max(1, Math.min(maxEdges, parseInt(document.getElementById("randomEdgeCount").value, 10) || n));
+    const maxDegree = Math.max(1, parseInt(document.getElementById("randomMaxDegree").value, 10) || n - 1);
+    const minWeight = parseInt(document.getElementById("randomMinWeight").value, 10);
+    const maxWeight = parseInt(document.getElementById("randomMaxWeight").value, 10);
+    const ensureConnected = document.getElementById("ensureConnected").checked;
+
+    if (Number.isNaN(minWeight) || Number.isNaN(maxWeight) || minWeight < 0 || maxWeight < minWeight) {
+        setStatus("Khoảng trọng số không hợp lệ.");
+        return;
+    }
+
+    const deg = Array(n + 1).fill(0);
+    const used = new Set();
+    const edges = [];
+
+    function tryAdd(u, v) {
+        if (u === v) return false;
+        if (deg[u] >= maxDegree || deg[v] >= maxDegree) return false;
+        const code = edgeCode(u, v);
+        if (used.has(code)) return false;
+
+        used.add(code);
+        deg[u]++;
+        deg[v]++;
+        edges.push([u, v, randomInt(minWeight, maxWeight)]);
+        return true;
+    }
+
+    if (ensureConnected) {
+        for (let node = 2; node <= n; node++) {
+            let linked = false;
+            for (let t = 0; t < 50 && !linked; t++) {
+                const parent = randomInt(1, node - 1);
+                linked = tryAdd(node, parent);
+            }
+            if (!linked) {
+                for (let parent = 1; parent < node && !linked; parent++) {
+                    linked = tryAdd(node, parent);
+                }
+            }
+        }
+    }
+
+    let guard = 0;
+    while (edges.length < desiredEdges && guard < maxEdges * 30) {
+        guard++;
+        const u = randomInt(1, n);
+        const v = randomInt(1, n);
+        tryAdd(u, v);
+    }
+
+    setEdgeRows(edges);
+    circularPos(n);
+    currentEdges = edges;
+    drawGraph(currentEdges, null, null, []);
+    finalPath = [];
+    finalDist = [];
+    updateDistanceInfo();
+    resetExplanation();
+    setStatus(`Đã tạo ngẫu nhiên ${edges.length} cạnh cho ${n} đỉnh.`);
+}
+
+function randomizeStartTarget() {
+    const n = parseInt(document.getElementById("n").value, 10);
+    if (!Number.isInteger(n) || n < 2) {
+        setStatus("Số đỉnh phải >= 2 để random start/target.");
+        return;
+    }
+
+    let s = randomInt(1, n);
+    let t = randomInt(1, n);
+    while (s === t) {
+        t = randomInt(1, n);
+    }
+
+    document.getElementById("start").value = String(s);
+    document.getElementById("target").value = String(t);
+    resetExplanation();
+    setStatus(`Đã random start=${s}, target=${t}.`);
+}
+
+function circularPos(n) {
     positions = {};
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.38;
+
     for (let i = 1; i <= n; i++) {
+        const ang = (-Math.PI / 2) + (2 * Math.PI * (i - 1) / n);
         positions[i] = {
-            x: 50 + Math.random() * 400,
-            y: 50 + Math.random() * 300
+            x: cx + radius * Math.cos(ang),
+            y: cy + radius * Math.sin(ang)
         };
     }
 }
 
-function drawGraph(edges, highlightNode=null, highlightEdge=null) {
+function drawWeightLabel(x, y, value) {
+    const text = String(value);
+    ctx.font = "12px 'Trebuchet MS'";
+    const paddingX = 6;
+    const paddingY = 3;
+    const tw = ctx.measureText(text).width;
+    const w = tw + paddingX * 2;
+    const h = 18;
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    ctx.strokeStyle = "#cfdccf";
+    ctx.lineWidth = 1;
+
+    const rx = x - w / 2;
+    const ry = y - h / 2;
+
+    ctx.beginPath();
+    if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(rx, ry, w, h, 7);
+    } else {
+        // Fallback for engines that do not support CanvasRenderingContext2D.roundRect.
+        const r = 7;
+        ctx.moveTo(rx + r, ry);
+        ctx.lineTo(rx + w - r, ry);
+        ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + r);
+        ctx.lineTo(rx + w, ry + h - r);
+        ctx.quadraticCurveTo(rx + w, ry + h, rx + w - r, ry + h);
+        ctx.lineTo(rx + r, ry + h);
+        ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - r);
+        ctx.lineTo(rx, ry + r);
+        ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#1f2f25";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x, y + 0.5);
+}
+
+function drawGraph(edges, highlightNode=null, highlightEdge=null, path=[]) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "gray";
-    for (const [u,v,w] of edges) {
+    ctx.fillStyle = "#f8fcf7";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const pathEdgeSet = new Set();
+    for (let i = 0; i < path.length - 1; i++) {
+        const a = path[i], b = path[i + 1];
+        const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+        pathEdgeSet.add(key);
+    }
+
+    for (const [u, v, w] of edges) {
         const a = positions[u];
         const b = positions[v];
+        if (!a || !b) continue;
+
+        const edgeKey = u < v ? `${u}-${v}` : `${v}-${u}`;
+        const inFinalPath = pathEdgeSet.has(edgeKey);
+
+        ctx.strokeStyle = inFinalPath ? "#00b050" : "#6f8174";
+        ctx.lineWidth = inFinalPath ? 4 : 2;
 
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
         ctx.stroke();
+
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2;
+        const nx = -(b.y - a.y);
+        const ny = b.x - a.x;
+        const nlen = Math.hypot(nx, ny) || 1;
+
+        const offset = 12;
+        const lx = mx + (nx / nlen) * offset;
+        const ly = my + (ny / nlen) * offset;
+        drawWeightLabel(lx, ly, w);
     }
 
     if (highlightEdge) {
         const a = positions[highlightEdge.from];
         const b = positions[highlightEdge.to];
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-        ctx.lineWidth = 1;
+        if (a && b) {
+            ctx.strokeStyle = "#d65252";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+        }
     }
 
     for (const i in positions) {
         const p = positions[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 15, 0, Math.PI*2);
+        const inPath = path.includes(Number(i));
 
-        ctx.fillStyle = (i == highlightNode) ? "orange" : "lightblue";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+
+        if (Number(i) === highlightNode) {
+            ctx.fillStyle = "#ffb84d";
+        } else if (inPath) {
+            ctx.fillStyle = "#b8eec9";
+        } else {
+            ctx.fillStyle = "#7ec8e8";
+        }
+
         ctx.fill();
+        ctx.strokeStyle = "#34473a";
+        ctx.lineWidth = 3;
         ctx.stroke();
 
-        ctx.fillStyle = "black";
-        ctx.fillText(i, p.x-4, p.y+4);
-    }
-}
-
-function drawPath(path) {
-    if (!path || path.length === 0) return;
-
-    ctx.strokeStyle = "green";
-    ctx.lineWidth = 4;
-
-    for (let i = 0; i < path.length - 1; i++) {
-        const a = positions[path[i]];
-        const b = positions[path[i+1]];
-
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
+        ctx.fillStyle = "#122017";
+        ctx.font = "bold 14px 'Trebuchet MS'";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(i, p.x, p.y + 0.5);
     }
 
     ctx.lineWidth = 1;
 }
 
+function drawPath(path) {
+    drawGraph(currentEdges, null, null, path);
+}
+
+function updateDistanceInfo() {
+    if (!finalDist || finalDist.length === 0) {
+        distInfoEl.textContent = "Khoảng cách từng đỉnh sẽ hiển thị tại đây.";
+        return;
+    }
+
+    const chunks = finalDist.map((d, idx) => {
+        const val = (d === null || d === undefined || !Number.isFinite(d)) ? "∞" : d;
+        return `d(${idx + 1})=${val}`;
+    });
+
+    distInfoEl.textContent = chunks.join(" | ");
+}
+
 async function run() {
-    const n = parseInt(document.getElementById("n").value);
-    const start = parseInt(document.getElementById("start").value);
-    const target = parseInt(document.getElementById("target").value);
+    const n = parseInt(document.getElementById("n").value, 10);
+    const start = parseInt(document.getElementById("start").value, 10);
+    const target = parseInt(document.getElementById("target").value, 10);
 
-    const raw = document.getElementById("edges").value.trim().split("\n");
-    currentEdges = raw.map(x => x.trim().split(/\s+/).map(Number));
+    if (!Number.isInteger(n) || n < 2) {
+        setStatus("Số đỉnh phải là số nguyên >= 2.");
+        return;
+    }
 
-    randomPos(n);
+    if (!Number.isInteger(start) || !Number.isInteger(target) || start < 1 || target < 1 || start > n || target > n) {
+        setStatus("Đỉnh bắt đầu/đích phải nằm trong [1..n].");
+        return;
+    }
+
+    try {
+        currentEdges = parseEdgesFromRows(n);
+    } catch (err) {
+        setStatus(err.message);
+        return;
+    }
+
+    animationToken += 1;
+    const token = animationToken;
+
+    if (Object.keys(positions).length !== n) {
+        circularPos(n);
+    }
+
     drawGraph(currentEdges);
+    setStatus("Đang chạy Dijkstra...");
+    setExplanation("Đang chạy thuật toán... chờ một chút để mình giải thích kết quả theo cách dễ hiểu.");
+    updateDistanceInfo();
 
     const res = await fetch("/run", {
         method: "POST",
@@ -130,32 +913,178 @@ async function run() {
         body: JSON.stringify({ n, start, target, edges: currentEdges })
     });
 
+    if (!res.ok) {
+        setStatus("Backend lỗi khi chạy thuật toán.");
+        return;
+    }
+
     const data = await res.json();
+    if (token !== animationToken) return;
+
     steps = data.steps;
     finalPath = data.path;
+    finalDist = data.dist;
     stepIndex = 0;
+    updateDistanceInfo();
+    explainResult(start, target, finalPath, finalDist, steps, currentEdges);
 
-    animate();
+    animate(token);
 }
 
-function animate() {
+function animate(token) {
+    if (token !== animationToken) return;
+
     if (stepIndex >= steps.length) {
-        drawGraph(currentEdges);
         drawPath(finalPath);
+        if (finalPath && finalPath.length > 0) {
+            setStatus(`Xong. Đường đi ngắn nhất có ${finalPath.length - 1} cạnh.`);
+        } else {
+            setStatus("Không có đường đi từ start đến target.");
+        }
         return;
     }
 
     const s = steps[stepIndex];
 
     if (s.type === "visit") {
-        drawGraph(currentEdges, s.node, null);
+        drawGraph(currentEdges, s.node, null, finalPath);
+        setStatus(`Đang visit đỉnh ${s.node}...`);
     } else if (s.type === "relax") {
-        drawGraph(currentEdges, null, s);
+        drawGraph(currentEdges, null, s, finalPath);
+        setStatus(`Relax cạnh ${s.from} -> ${s.to}, dist mới = ${s.new_dist}`);
     }
 
     stepIndex++;
-    setTimeout(animate, 700);
+    const speed = Math.max(100, parseInt(document.getElementById("speed").value, 10) || 700);
+    setTimeout(() => animate(token), speed);
 }
+
+function getCanvasPoint(event) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+    };
+}
+
+function getNodeAtPoint(x, y) {
+    const radius = 18;
+    for (const key of Object.keys(positions)) {
+        const nodeId = Number(key);
+        const p = positions[nodeId];
+        if (!p) continue;
+        if (Math.hypot(x - p.x, y - p.y) <= radius + 4) {
+            return nodeId;
+        }
+    }
+    return null;
+}
+
+function clampNodePosition(x, y) {
+    const margin = 22;
+    return {
+        x: Math.max(margin, Math.min(canvas.width - margin, x)),
+        y: Math.max(margin, Math.min(canvas.height - margin, y))
+    };
+}
+
+canvas.addEventListener("pointerdown", (event) => {
+    const point = getCanvasPoint(event);
+    const nodeId = getNodeAtPoint(point.x, point.y);
+
+    if (nodeId === null) {
+        return;
+    }
+
+    // Stop current animation when user manually repositions nodes.
+    animationToken += 1;
+
+    draggingNodeId = nodeId;
+    draggingPointerId = event.pointerId;
+    dragOffsetX = positions[nodeId].x - point.x;
+    dragOffsetY = positions[nodeId].y - point.y;
+
+    canvas.setPointerCapture(event.pointerId);
+    canvas.style.cursor = "grabbing";
+    setStatus(`Đang kéo node ${nodeId}...`);
+});
+
+canvas.addEventListener("pointermove", (event) => {
+    const point = getCanvasPoint(event);
+
+    if (draggingNodeId !== null && event.pointerId === draggingPointerId) {
+        const clamped = clampNodePosition(point.x + dragOffsetX, point.y + dragOffsetY);
+        positions[draggingNodeId].x = clamped.x;
+        positions[draggingNodeId].y = clamped.y;
+        drawGraph(currentEdges, null, null, finalPath);
+        return;
+    }
+
+    const hovered = getNodeAtPoint(point.x, point.y);
+    canvas.style.cursor = hovered === null ? "grab" : "pointer";
+});
+
+function stopDragging(event) {
+    if (draggingNodeId === null || event.pointerId !== draggingPointerId) {
+        return;
+    }
+
+    const movedId = draggingNodeId;
+    draggingNodeId = null;
+    draggingPointerId = null;
+    canvas.style.cursor = "grab";
+    setStatus(`Đã di chuyển node ${movedId}.`);
+}
+
+canvas.addEventListener("pointerup", stopDragging);
+canvas.addEventListener("pointercancel", stopDragging);
+
+function refreshPreviewFromInputs() {
+    const n = parseInt(document.getElementById("n").value, 10);
+    if (!Number.isInteger(n) || n < 2) {
+        return;
+    }
+
+    try {
+        currentEdges = parseEdgesFromRows(n);
+    } catch {
+        // Keep last valid preview when user is still typing.
+        return;
+    }
+
+    finalPath = [];
+    finalDist = [];
+    stepIndex = 0;
+    animationToken += 1;
+
+    if (Object.keys(positions).length !== n) {
+        circularPos(n);
+    }
+    drawGraph(currentEdges);
+    updateDistanceInfo();
+    resetExplanation();
+    setStatus("Đã cập nhật preview đồ thị.");
+}
+
+document.getElementById("n").addEventListener("change", refreshPreviewFromInputs);
+document.getElementById("n").addEventListener("change", updateRandomEdgeBoundHint);
+document.getElementById("edgeRows").addEventListener("input", queuePreviewRefresh);
+document.getElementById("start").addEventListener("change", queuePreviewRefresh);
+document.getElementById("target").addEventListener("change", queuePreviewRefresh);
+
+setEdgeRows([
+    [1, 2, 2],
+    [1, 3, 4],
+    [2, 4, 7],
+    [3, 5, 1]
+]);
+updateRandomEdgeBoundHint();
+
+refreshPreviewFromInputs();
+resetExplanation();
+
 </script>
 
 </body>

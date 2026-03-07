@@ -3,84 +3,905 @@
 <head>
 <title>Grid Pathfinding</title>
 <style>
-canvas { border:1px solid black; }
+    :root {
+        --bg: #f3f6ee;
+        --panel: #ffffff;
+        --ink: #1f2a1f;
+        --accent: #2a6f3a;
+        --accent-soft: #cfe7c8;
+        --line: #b8c8b1;
+        --wall: #28312a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--ink);
+        background:
+            radial-gradient(circle at 20% 10%, #dcebcf 0%, transparent 45%),
+            radial-gradient(circle at 90% 90%, #d4e4d0 0%, transparent 35%),
+            var(--bg);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .layout {
+        width: min(980px, 100%);
+        background: var(--panel);
+        border: 1px solid #d8e1d2;
+        border-radius: 16px;
+        box-shadow: 0 14px 40px rgba(31, 42, 31, 0.12);
+        overflow: hidden;
+    }
+
+    .header {
+        padding: 16px 18px;
+        border-bottom: 1px solid #e1e8dc;
+        background: linear-gradient(90deg, #eef6ea, #f8fbf5);
+    }
+
+    .header h2 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+    }
+
+    .header p {
+        margin: 6px 0 0;
+        color: #4d5d4d;
+        font-size: 14px;
+    }
+
+    .main {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+    }
+
+    .controls {
+        border-right: 1px solid #e6ece2;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .group {
+        background: #f9fcf7;
+        border: 1px solid #e4ece0;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .group h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #4d5d4d;
+    }
+
+    .buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    button {
+        border: 1px solid #ccd9c5;
+        background: #ffffff;
+        color: var(--ink);
+        border-radius: 9px;
+        padding: 8px 10px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+
+    button:hover {
+        transform: translateY(-1px);
+        border-color: #9fb697;
+        background: #f4faf0;
+    }
+
+    button.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: #0f2d14;
+        font-weight: 600;
+    }
+
+    button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    button.primary:hover {
+        background: #205c2f;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13px;
+        color: #4d5d4d;
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+
+    .canvas-wrap {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 12px;
+        color: #3f4e3f;
+    }
+
+    .path-legend {
+        background: #f8fbf5;
+        border: 1px solid #e1eadb;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: #334333;
+    }
+
+    .path-legend .title {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .path-legend .items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .path-legend .item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #dfe8d9;
+        background: #fff;
+        border-radius: 999px;
+        padding: 4px 8px;
+        cursor: pointer;
+        transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .path-legend .item:hover,
+    .path-legend .item.is-hover {
+        transform: translateY(-1px);
+        border-color: #87a57f;
+        background: #f3faf0;
+    }
+
+    .path-legend .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+    }
+
+    .path-legend .empty {
+        color: #617261;
+        font-style: italic;
+    }
+
+    .size-input {
+        width: 100%;
+        border: 1px solid #ccd8c8;
+        border-radius: 8px;
+        padding: 8px;
+        background: #fff;
+        color: #1f2a1f;
+        font-size: 13px;
+    }
+
+    .hint {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #5c6d5c;
+        line-height: 1.35;
+    }
+
+    .explain-box {
+        border: 1px solid #dfead8;
+        border-radius: 10px;
+        background: #f9fdf6;
+        padding: 10px;
+        font-size: 13px;
+        color: #2f412f;
+        line-height: 1.45;
+    }
+
+    .explain-box .title {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .legend span::before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 6px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .l-start::before { background: #2b9f4f; }
+    .l-end::before { background: #d44c3b; }
+    .l-best::before { background: #00b050; }
+    .l-alt::before { background: #3e7fff; }
+
+    #cv {
+        width: min(100%, 620px);
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        touch-action: none;
+        user-select: none;
+    }
+
+    .status {
+        font-size: 13px;
+        color: #2f402f;
+        min-height: 20px;
+    }
+
+    @media (max-width: 860px) {
+        .main {
+            grid-template-columns: 1fr;
+        }
+
+        .controls {
+            border-right: 0;
+            border-bottom: 1px solid #e6ece2;
+        }
+    }
 </style>
 </head>
 <body>
+<div class="layout">
+    <div class="header">
+        <h2>Grid Pathfinding Visualizer</h2>
+        <p>Keo chuot de to tuong lien tuc, sinh map ngau nhien va xem nhieu duong di.</p>
+    </div>
 
-<h2>Click: Start → End → Walls</h2>
-<button onclick="mode='start'">Set Start</button>
-<button onclick="mode='end'">Set End</button>
-<button onclick="mode='wall'">Draw Wall</button>
-<button onclick="run()">Run</button>
+    <div class="main">
+        <aside class="controls">
+            <div class="group">
+                <h3>Che do ve</h3>
+                <div class="buttons">
+                    <button id="btnStart" onclick="setMode('start')">Set Start</button>
+                    <button id="btnEnd" onclick="setMode('end')">Set End</button>
+                    <button id="btnWall" class="active" onclick="setMode('wall')">Draw Wall</button>
+                    <button id="btnErase" onclick="setMode('erase')">Erase</button>
+                </div>
+            </div>
 
-<br><br>
-<canvas id="cv" width="500" height="500"></canvas>
+            <div class="group">
+                <h3>Map ngau nhien</h3>
+                <label class="field">
+                    Wall density: <span id="densityLabel">28%</span>
+                    <input id="density" type="range" min="5" max="45" value="28" oninput="updateDensityLabel()">
+                </label>
+                <div class="buttons">
+                    <button onclick="randomizeMap()">Random Start/End/Wall</button>
+                    <button onclick="clearWalls()">Clear Wall</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <h3>Hanh dong</h3>
+                <label class="field" style="margin-bottom:8px;">
+                    Top-K duong di:
+                    <input id="topKInput" class="size-input" type="number" min="1" max="30" value="10">
+                </label>
+                <div class="buttons">
+                    <button class="primary" onclick="run()">Run</button>
+                    <button onclick="resetAll()">Reset All</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <h3>Kich thuoc ma tran</h3>
+                <label class="field">
+                    Grid size (N x N):
+                    <input id="gridSizeInput" class="size-input" type="number" min="5" max="80" value="25">
+                </label>
+                <div class="buttons" style="margin-top:8px;">
+                    <button onclick="applyGridSize()">Ap dung kich thuoc</button>
+                    <button onclick="setDefaultGridSize()">Mac dinh 25x25</button>
+                </div>
+                <div class="hint">Doi kich thuoc se tao lai luoi va xoa ket qua cu. Gia tri lon se chi tiet hon nhung kho ve hon.</div>
+            </div>
+        </aside>
+
+        <section class="canvas-wrap">
+            <div class="legend">
+                <span class="l-start">Start</span>
+                <span class="l-end">End</span>
+            </div>
+            <div class="path-legend" id="pathLegend">
+                <div class="title">Y nghia mau duong</div>
+                <div class="items empty">Chua co ket qua. Bam Run de hien thi y nghia tung mau.</div>
+            </div>
+            <canvas id="cv" width="625" height="625"></canvas>
+            <div class="status" id="status">Chua chay.</div>
+            <div class="explain-box" id="explainBox">
+                <div class="title">Giai thich de theo doi</div>
+                <div id="explainContent">Bam Run de xem giai thich. Di chuot vao tung hang mau de highlight duong tuong ung tren luoi.</div>
+            </div>
+        </section>
+    </div>
+</div>
 
 <script>
-const N = 25;
-const SIZE = 20;
+const DEFAULT_GRID_SIZE = 25;
+const ALT_COLORS = [
+    "#3e7fff", "#f39c12", "#7d5fff", "#18a999", "#d35454",
+    "#7f8c8d", "#0088cc", "#8e44ad", "#c0392b", "#16a085"
+];
 
-let grid = Array.from({length:N},()=>Array(N).fill(0));
+let gridSize = DEFAULT_GRID_SIZE;
+let grid = createEmptyGrid(gridSize);
 let start=null, end=null;
 let mode="wall";
+let bestPath = [];
+let alternativePaths = [];
+let rankedPaths = [];
+let isDrawing = false;
+let lastCell = null;
 
 const cv=document.getElementById("cv");
 const ctx=cv.getContext("2d");
+const statusEl = document.getElementById("status");
+const pathLegendEl = document.getElementById("pathLegend");
+const gridSizeInputEl = document.getElementById("gridSizeInput");
+const topKInputEl = document.getElementById("topKInput");
+const explainContentEl = document.getElementById("explainContent");
+let hoveredPathIndex = -1;
 
-cv.onclick = e => {
-    const rect=cv.getBoundingClientRect();
-    const x=Math.floor((e.clientY-rect.top)/SIZE);
-    const y=Math.floor((e.clientX-rect.left)/SIZE);
+function createEmptyGrid(n) {
+    return Array.from({length:n}, () => Array(n).fill(0));
+}
 
-    if(mode==="start"){ start=[x,y]; }
-    else if(mode==="end"){ end=[x,y]; }
-    else grid[x][y]=1;
+function getCellSize() {
+    return cv.width / gridSize;
+}
 
-    draw();
-};
+function setStatus(msg) {
+    statusEl.textContent = msg;
+}
 
-function draw(path=[]) {
-    ctx.clearRect(0,0,cv.width,cv.height);
+function setExplanation(html) {
+    explainContentEl.innerHTML = html;
+}
 
-    for(let i=0;i<N;i++){
-        for(let j=0;j<N;j++){
-            if(grid[i][j]===1) ctx.fillStyle="black";
-            else ctx.fillStyle="white";
-            ctx.fillRect(j*SIZE,i*SIZE,SIZE,SIZE);
-            ctx.strokeRect(j*SIZE,i*SIZE,SIZE,SIZE);
+function getAllPaths() {
+    return [bestPath, ...alternativePaths].filter(path => path && path.length > 0);
+}
+
+function colorForPathIndex(idx) {
+    return idx === 0 ? "#00b050" : ALT_COLORS[(idx - 1) % ALT_COLORS.length];
+}
+
+function formatPathSnippet(path) {
+    if (!path || path.length === 0) return "(rong)";
+    if (path.length <= 6) {
+        return path.map(([x, y]) => `(${x},${y})`).join(" -> ");
+    }
+
+    const head = path.slice(0, 3).map(([x, y]) => `(${x},${y})`).join(" -> ");
+    const tail = path.slice(-2).map(([x, y]) => `(${x},${y})`).join(" -> ");
+    return `${head} -> ... -> ${tail}`;
+}
+
+function updateExplanation() {
+    const allPaths = getAllPaths();
+    if (allPaths.length === 0) {
+        setExplanation("Bam Run de xem giai thich. Di chuot vao tung hang mau de highlight duong tuong ung tren luoi.");
+        return;
+    }
+
+    const bestSteps = stepsOf(allPaths[0]);
+    if (hoveredPathIndex >= 0 && hoveredPathIndex < allPaths.length) {
+        const p = allPaths[hoveredPathIndex];
+        const pSteps = stepsOf(p);
+        const delta = pSteps - bestSteps;
+        const rankLabel = hoveredPathIndex + 1;
+        const relation = delta === 0 ? "dong hang ngan nhat" : `${delta > 0 ? `+${delta}` : `${delta}`} so voi duong ngan nhat`;
+
+        setExplanation(`
+            Ban dang xem <b>Hang ${rankLabel}</b> voi <b>${pSteps} buoc</b> (${relation}).<br>
+            Mau tuong ung tren luoi da duoc highlight de ban doi chieu de hon.<br>
+            Trich doan duong di: <b>${formatPathSnippet(p)}</b>
+        `);
+        return;
+    }
+
+    let sameCostNote = "";
+    if (rankedPaths.length > 1) {
+        const sameCost = rankedPaths.every(p => p.cost === rankedPaths[0].cost);
+        if (sameCost) {
+            sameCostNote = "<br>Nhieu hang cung chi phi la binh thuong: do thi co nhieu duong ngan nhat dong hang, Dijkstra van dung va co y nghia.";
         }
     }
 
-    if(start){
-        ctx.fillStyle="green";
-        ctx.fillRect(start[1]*SIZE,start[0]*SIZE,SIZE,SIZE);
+    setExplanation(`
+        Tim thay <b>${allPaths.length}</b> duong hop le tu Start den End.<br>
+        Duong tot nhat la <b>Hang 1</b> voi <b>${bestSteps} buoc</b> (mau xanh la).<br>
+        Di chuot vao tung hang trong "Y nghia mau duong" de highlight duong tuong ung tren luoi.${sameCostNote}
+    `);
+}
+
+function setMode(nextMode) {
+    mode = nextMode;
+    ["btnStart", "btnEnd", "btnWall", "btnErase"].forEach((id) => {
+        document.getElementById(id).classList.remove("active");
+    });
+    if (mode === "start") document.getElementById("btnStart").classList.add("active");
+    if (mode === "end") document.getElementById("btnEnd").classList.add("active");
+    if (mode === "wall") document.getElementById("btnWall").classList.add("active");
+    if (mode === "erase") document.getElementById("btnErase").classList.add("active");
+}
+
+function updateDensityLabel() {
+    const density = document.getElementById("density").value;
+    document.getElementById("densityLabel").textContent = density + "%";
+}
+
+function applyGridSize() {
+    const next = parseInt(gridSizeInputEl.value, 10);
+    if (!Number.isInteger(next) || next < 5 || next > 80) {
+        setStatus("Kich thuoc khong hop le. Chi nhan so nguyen tu 5 den 80.");
+        return;
     }
 
-    if(end){
-        ctx.fillStyle="red";
-        ctx.fillRect(end[1]*SIZE,end[0]*SIZE,SIZE,SIZE);
+    gridSize = next;
+    grid = createEmptyGrid(gridSize);
+    start = null;
+    end = null;
+    clearPaths();
+    draw();
+    setStatus(`Da doi kich thuoc luoi thanh ${gridSize}x${gridSize}.`);
+}
+
+function setDefaultGridSize() {
+    gridSizeInputEl.value = String(DEFAULT_GRID_SIZE);
+    applyGridSize();
+}
+
+function clearPaths() {
+    bestPath = [];
+    alternativePaths = [];
+    rankedPaths = [];
+    hoveredPathIndex = -1;
+    renderPathLegend();
+    updateExplanation();
+}
+
+function stepsOf(path) {
+    return path && path.length > 0 ? path.length - 1 : 0;
+}
+
+function renderPathLegend() {
+    const hasRanked = rankedPaths.length > 0;
+    const hasBest = bestPath.length > 0;
+    const hasAlt = alternativePaths.length > 0;
+
+    if (!hasRanked && !hasBest && !hasAlt) {
+        pathLegendEl.innerHTML = `
+            <div class="title">Y nghia mau duong</div>
+            <div class="items empty">Chua co ket qua. Bam Run de hien thi y nghia tung mau.</div>
+        `;
+        hoveredPathIndex = -1;
+        return;
     }
 
-    ctx.fillStyle="blue";
-    for(const [x,y] of path){
-        ctx.fillRect(y*SIZE,x*SIZE,SIZE,SIZE);
+    if (hasRanked) {
+        const bestCost = rankedPaths[0].cost;
+        let itemsHtml = "";
+
+        for (let i = 0; i < rankedPaths.length; i++) {
+            const p = rankedPaths[i];
+            const color = i === 0 ? "#00b050" : ALT_COLORS[(i - 1) % ALT_COLORS.length];
+            const delta = p.cost - bestCost;
+            const relationText = delta === 0 ? "dong hang ngan nhat" : `${delta > 0 ? `+${delta}` : `${delta}`} so voi hang 1`;
+            const label = i === 0 ? "Hang 1 (ngan nhat)" : `Hang ${p.rank}`;
+
+            itemsHtml += `
+                <span class="item" data-path-index="${i}">
+                    <span class="dot" style="background:${color}"></span>
+                    ${label}: ${p.cost} buoc (${relationText})
+                </span>
+            `;
+        }
+
+        pathLegendEl.innerHTML = `
+            <div class="title">Y nghia mau duong (Top-K shortest theo Dijkstra + Yen)</div>
+            <div class="items">${itemsHtml}</div>
+        `;
+        attachLegendHoverHandlers();
+        return;
+    }
+
+    const bestSteps = stepsOf(bestPath);
+    let itemsHtml = `
+        <span class="item" data-path-index="0">
+            <span class="dot" style="background:#00b050"></span>
+            Duong dung (ngan nhat): ${bestSteps} buoc
+        </span>
+    `;
+
+    for (let i = 0; i < alternativePaths.length; i++) {
+        const color = ALT_COLORS[i % ALT_COLORS.length];
+        const steps = stepsOf(alternativePaths[i]);
+        const delta = steps - bestSteps;
+        const relationText = delta === 0 ? "dong hang ngan nhat" : `${delta > 0 ? `+${delta}` : `${delta}`} so voi duong dung`;
+
+        itemsHtml += `
+            <span class="item" data-path-index="${i + 1}">
+                <span class="dot" style="background:${color}"></span>
+                Duong phu ${i + 1}: ${steps} buoc (${relationText})
+            </span>
+        `;
+    }
+
+    pathLegendEl.innerHTML = `
+        <div class="title">Y nghia mau duong</div>
+        <div class="items">${itemsHtml}</div>
+    `;
+    attachLegendHoverHandlers();
+}
+
+function attachLegendHoverHandlers() {
+    const items = pathLegendEl.querySelectorAll(".item[data-path-index]");
+    items.forEach((item) => {
+        item.addEventListener("mouseenter", () => {
+            hoveredPathIndex = parseInt(item.dataset.pathIndex, 10);
+            items.forEach(node => node.classList.remove("is-hover"));
+            item.classList.add("is-hover");
+            updateExplanation();
+            draw();
+        });
+
+        item.addEventListener("mouseleave", () => {
+            hoveredPathIndex = -1;
+            item.classList.remove("is-hover");
+            updateExplanation();
+            draw();
+        });
+    });
+}
+
+function inBounds(x, y) {
+    return x >= 0 && x < gridSize && y >= 0 && y < gridSize;
+}
+
+function getCellFromEvent(e) {
+    const rect = cv.getBoundingClientRect();
+    const scaleX = cv.width / rect.width;
+    const scaleY = cv.height / rect.height;
+    const px = (e.clientX - rect.left) * scaleX;
+    const py = (e.clientY - rect.top) * scaleY;
+
+    const cell = getCellSize();
+    const y = Math.floor(px / cell);
+    const x = Math.floor(py / cell);
+
+    if (!inBounds(x, y)) return null;
+    return [x, y];
+}
+
+function setWallCell(x, y, value) {
+    if (!inBounds(x, y)) return;
+    if (start && start[0] === x && start[1] === y) return;
+    if (end && end[0] === x && end[1] === y) return;
+    grid[x][y] = value;
+}
+
+function drawLineCells(a, b, drawValue) {
+    let x0 = a[0];
+    let y0 = a[1];
+    const x1 = b[0];
+    const y1 = b[1];
+
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+        setWallCell(x0, y0, drawValue);
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
     }
 }
 
+function applyPaint(cell, isPointerDownEvent=false) {
+    if (!cell) return;
+    const [x, y] = cell;
+
+    if (mode === "start") {
+        start = [x, y];
+        grid[x][y] = 0;
+        clearPaths();
+        draw();
+        return;
+    }
+
+    if (mode === "end") {
+        end = [x, y];
+        grid[x][y] = 0;
+        clearPaths();
+        draw();
+        return;
+    }
+
+    if (mode === "wall" || mode === "erase") {
+        clearPaths();
+        const drawValue = mode === "wall" ? 1 : 0;
+        if (lastCell && !isPointerDownEvent) {
+            drawLineCells(lastCell, cell, drawValue);
+        } else {
+            setWallCell(x, y, drawValue);
+        }
+        draw();
+    }
+}
+
+function drawPath(path, color, width, alpha=1) {
+    if (!path || path.length < 2) return;
+    const cell = getCellSize();
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    const [sx, sy] = path[0];
+    ctx.moveTo(sy * cell + cell / 2, sx * cell + cell / 2);
+
+    for (let i = 1; i < path.length; i++) {
+        const [x, y] = path[i];
+        ctx.lineTo(y * cell + cell / 2, x * cell + cell / 2);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
+function draw(path=[]) {
+    if (path.length > 0) {
+        bestPath = path;
+    }
+    const cell = getCellSize();
+
+    ctx.clearRect(0,0,cv.width,cv.height);
+
+    for(let i=0;i<gridSize;i++){
+        for(let j=0;j<gridSize;j++){
+            if(grid[i][j]===1) ctx.fillStyle = "#28312a";
+            else ctx.fillStyle = "#fefefe";
+            ctx.fillRect(j*cell,i*cell,cell,cell);
+            ctx.strokeStyle = "#dbe6d5";
+            ctx.strokeRect(j*cell,i*cell,cell,cell);
+        }
+    }
+
+    const allPaths = getAllPaths();
+    if (hoveredPathIndex >= 0 && hoveredPathIndex < allPaths.length) {
+        for (let i = 0; i < allPaths.length; i++) {
+            if (i === hoveredPathIndex) continue;
+            drawPath(allPaths[i], "#95a39a", 2, 0.25);
+        }
+        drawPath(allPaths[hoveredPathIndex], colorForPathIndex(hoveredPathIndex), 6, 1);
+    } else {
+        for (let i = 0; i < alternativePaths.length; i++) {
+            const color = ALT_COLORS[i % ALT_COLORS.length];
+            drawPath(alternativePaths[i], color, 3, 0.78);
+        }
+        drawPath(bestPath, "#00b050", 5, 0.95);
+    }
+
+    if(start){
+        ctx.fillStyle="#2b9f4f";
+        ctx.beginPath();
+        ctx.arc(start[1]*cell + cell/2, start[0]*cell + cell/2, cell*0.35, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    if(end){
+        ctx.fillStyle="#d44c3b";
+        ctx.beginPath();
+        ctx.arc(end[1]*cell + cell/2, end[0]*cell + cell/2, cell*0.35, 0, Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function randomFreeCell() {
+    for (let tries = 0; tries < 2000; tries++) {
+        const x = Math.floor(Math.random() * gridSize);
+        const y = Math.floor(Math.random() * gridSize);
+        if (grid[x][y] === 0) return [x, y];
+    }
+    return null;
+}
+
+function randomizeMap() {
+    clearPaths();
+
+    const density = parseInt(document.getElementById("density").value, 10) / 100;
+    grid = createEmptyGrid(gridSize);
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (Math.random() < density) {
+                grid[i][j] = 1;
+            }
+        }
+    }
+
+    start = randomFreeCell();
+    end = randomFreeCell();
+
+    while (start && end && start[0] === end[0] && start[1] === end[1]) {
+        end = randomFreeCell();
+    }
+
+    if (!start || !end) {
+        setStatus("Khong the tao start/end hop le. Thu giam wall density.");
+    } else {
+        grid[start[0]][start[1]] = 0;
+        grid[end[0]][end[1]] = 0;
+        setStatus("Da tao map ngau nhien.");
+    }
+
+    draw();
+}
+
+function clearWalls() {
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            grid[i][j] = 0;
+        }
+    }
+    clearPaths();
+    setStatus("Da xoa tat ca tuong.");
+    draw();
+}
+
+function resetAll() {
+    grid = createEmptyGrid(gridSize);
+    start = null;
+    end = null;
+    clearPaths();
+    setStatus("Da reset toan bo.");
+    draw();
+}
+
+cv.addEventListener("pointerdown", (e) => {
+    const cell = getCellFromEvent(e);
+    if (!cell) return;
+
+    isDrawing = true;
+    lastCell = cell;
+
+    applyPaint(cell, true);
+    cv.setPointerCapture(e.pointerId);
+});
+
+cv.addEventListener("pointermove", (e) => {
+    if (!isDrawing) return;
+    if (mode === "start" || mode === "end") return;
+    const cell = getCellFromEvent(e);
+    if (!cell) return;
+
+    applyPaint(cell);
+    lastCell = cell;
+});
+
+function stopDrawing() {
+    isDrawing = false;
+    lastCell = null;
+}
+
+cv.addEventListener("pointerup", stopDrawing);
+cv.addEventListener("pointerleave", stopDrawing);
+cv.addEventListener("pointercancel", stopDrawing);
+
+cv.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+});
+
 async function run(){
-    if(!start || !end) return;
+    if(!start || !end) {
+        setStatus("Can set Start va End truoc khi run.");
+        return;
+    }
+
+    setStatus("Dang tim duong...");
+
+    let topK = parseInt(topKInputEl.value, 10);
+    if (!Number.isInteger(topK)) topK = 10;
+    topK = Math.max(1, Math.min(30, topK));
+    topKInputEl.value = String(topK);
 
     const res=await fetch("/run",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({grid,start,end})
+        body:JSON.stringify({grid,start,end,k:topK})
     });
 
+    if (!res.ok) {
+        const err = await res.json();
+        setStatus(err.error || "Khong tim thay duong.");
+        clearPaths();
+        draw();
+        return;
+    }
+
     const data=await res.json();
-    draw(data.path);
+    rankedPaths = data.paths || [];
+
+    if (rankedPaths.length > 0) {
+        bestPath = rankedPaths[0].path;
+        alternativePaths = rankedPaths.slice(1).map(p => p.path);
+    } else {
+        bestPath = data.best_path || [];
+        alternativePaths = data.alternative_paths || [];
+    }
+
+    renderPathLegend();
+    hoveredPathIndex = -1;
+    updateExplanation();
+
+    if (bestPath.length === 0) {
+        setStatus("Khong tim thay duong di.");
+    } else {
+        const sameCost = rankedPaths.length > 1 && rankedPaths.every(p => p.cost === rankedPaths[0].cost);
+        if (sameCost) {
+            setStatus(`Tim thay ${alternativePaths.length + 1}/${topK} duong dong hang ngan nhat (cung chi phi) theo Dijkstra.`);
+        } else {
+            setStatus(`Top-${alternativePaths.length + 1}/${topK} shortest da tim theo Dijkstra. Hang 1 mau xanh la.`);
+        }
+    }
+
+    draw();
 }
 
+updateDensityLabel();
+renderPathLegend();
+updateExplanation();
 draw();
 </script>
 </body>
