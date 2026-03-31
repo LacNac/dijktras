@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import heapq
-
-app = Flask(__name__)
+from DijkstraVisualize import dijkstra_bp
 
 def dijkstra_steps(n, edges, start, target):
     graph = [[] for _ in range(n + 1)]
@@ -51,12 +50,12 @@ def dijkstra_steps(n, edges, start, target):
     return steps, dist[1:], path
 
 
-@app.route("/")
+@dijkstra_bp.route("/")
 def index():
     return render_template("index2.html")
 
 
-@app.route("/run", methods=["POST"])
+@dijkstra_bp.route("/run", methods=["POST"])
 def run():
     data = request.json
 
@@ -75,4 +74,4 @@ def run():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    dijkstra_bp.run(debug=True)

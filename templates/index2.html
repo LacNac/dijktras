@@ -21,17 +21,18 @@
         * { box-sizing: border-box; }
 
         body {
-            margin: 0;
-            font-family: "Trebuchet MS", "Tahoma", sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(circle at 12% 10%, #e0f0d8 0%, transparent 38%),
-                radial-gradient(circle at 88% 90%, #dceee6 0%, transparent 34%),
-                var(--bg);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: 22px;
+           margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--ink);
+        background:
+            radial-gradient(circle at 20% 10%, #dcebcf 0%, transparent 45%),
+            radial-gradient(circle at 90% 90%, #d4e4d0 0%, transparent 35%),
+            var(--bg);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
         }
 
         .shell {
@@ -44,23 +45,22 @@
         }
 
         .header {
-            padding: 16px 18px;
-            border-bottom: 1px solid #e0ebdf;
-            background: linear-gradient(90deg, #edf8ee, #f9fcf7);
-        }
+        padding: 16px 18px;
+        border-bottom: 1px solid #e1e8dc;
+        background: linear-gradient(90deg, #eef6ea, #f8fbf5);
+    }
 
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            letter-spacing: 0.3px;
-        }
+    .header h2 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+    }
 
-        .header p {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
+    .header p {
+        margin: 6px 0 0;
+        color: #4d5d4d;
+        font-size: 14px;
+    }
         .layout {
             display: grid;
             grid-template-columns: 320px 1fr;
@@ -333,15 +333,38 @@
                 border-bottom: 1px solid #e6eee4;
             }
         }
+        a{
+        text-decoration: none;
+        color: black;
+        }
+        .tieu-de {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+        padding: 0;
+        margin: 0;
+        justify-content: space-around;
+        .Grid{
+            color: #b8c8b1;
+        }
+    }
     </style>
 </head>
 <body>
 <div class="shell">
     <div class="header">
-        <h1>Dijkstra Visualizer</h1>
-        <p>UI minh họa trực quan: mỗi cạnh đều hiển thị trọng số ngay trên đường nối.</p>
+        <h1>Bài Tập Nhóm Mạng Máy Tính - Nhóm 4
+            <p>Tìm đường đi ngắn nhất </p>
+        </h1>
+        <nav>
+            <ul class="tieu-de">
+                <li><a href="/Grid-Pathfinding-Visualizer" class="Grid">
+                    <h2>Grid Pathfinding Visualizer</h2>
+                </a></li>
+                <li><a href="/Dijkstra-Visualize"><h2>Dijkstra Visualizer</h2></a></li>
+            </ul>
+        </nav>
     </div>
-
     <div class="layout">
         <aside class="sidebar">
             <div class="group">

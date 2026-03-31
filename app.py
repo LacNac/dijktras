@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 import heapq
+from DijkstraVisualize import dijkstra_bp
 
 app = Flask(__name__)
 
+app.register_blueprint(dijkstra_bp)
 DIRS = [(1,0),(-1,0),(0,1),(0,-1)]
 
 def in_bounds(x, y, n, m):
@@ -141,14 +143,13 @@ def yen_k_shortest_paths(grid, start, end, k=10):
         })
 
     return ranked
-
-
 @app.route("/")
+@app.route("/Grid-Pathfinding-Visualizer")
 def index():
     return render_template("index1.html")
 
 
-@app.route("/run", methods=["POST"])
+@app.route("/Grid-Pathfinding-Visualizer/run", methods=["POST"])
 def run():
     data = request.json
     grid = data["grid"]
@@ -186,7 +187,6 @@ def run():
         "alternative_paths": alternatives,
         "paths": ranked_paths
     })
-
 
 if __name__ == "__main__":
     app.run(debug=True)

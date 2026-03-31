@@ -29,7 +29,10 @@
         justify-content: center;
         padding: 20px;
     }
-
+    a{
+        text-decoration: none;
+        color: black;
+    }
     .layout {
         width: min(980px, 100%);
         background: var(--panel);
@@ -275,14 +278,38 @@
             border-bottom: 1px solid #e6ece2;
         }
     }
+    .tieu-de {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+        padding: 0;
+        margin: 0;
+        justify-content: space-around;
+    }
+    .Dij{
+        color: #b8c8b1;
+    }
+    .Grid{
+        background-color: #c4e0bb;
+    }
 </style>
 </head>
 <body>
 <div class="layout">
     <div class="header">
-        <h2>Grid Pathfinding Visualizer</h2>
-        <p>Keo chuot de to tuong lien tuc, sinh map ngau nhien va xem nhieu duong di.</p>
+        <h1>Bài Tập Nhóm Mạng Máy Tính - Nhóm 4
+            <p>Tìm đường đi ngắn nhất </p>
+        </h1>
+        <nav>
+            <ul class="tieu-de">
+                <li><a href="/Grid-Pathfinding-Visualizer" class = "Grid">
+                    <h2>Grid Pathfinding Visualizer</h2>
+                </a></li>
+                <li><a href="/Dijkstra-Visualize" class = "Dij"><h2>Dijkstra Visualizer</h2></a></li>
+            </ul>
+        </nav>
     </div>
+        
 
     <div class="main">
         <aside class="controls">
