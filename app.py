@@ -149,7 +149,7 @@ def index():
     return render_template("index1.html")
 
 
-@app.route("/Grid-Pathfinding-Visualizer/run", methods=["POST"])
+@app.route("/run", methods=["POST"])
 def run():
     data = request.json
     grid = data["grid"]

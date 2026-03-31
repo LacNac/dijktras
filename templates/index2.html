@@ -930,7 +930,7 @@ async function run() {
     setExplanation("Đang chạy thuật toán... chờ một chút để mình giải thích kết quả theo cách dễ hiểu.");
     updateDistanceInfo();
 
-    const res = await fetch("/run", {
+    const res = await fetch("/Dijkstra-Visualize/run", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ n, start, target, edges: currentEdges })

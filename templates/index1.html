@@ -289,9 +289,6 @@
     .Dij{
         color: #b8c8b1;
     }
-    .Grid{
-        background-color: #c4e0bb;
-    }
 </style>
 </head>
 <body>
@@ -302,7 +299,7 @@
         </h1>
         <nav>
             <ul class="tieu-de">
-                <li><a href="/Grid-Pathfinding-Visualizer" class = "Grid">
+                <li><a href="/Grid-Pathfinding-Visualizer" >
                     <h2>Grid Pathfinding Visualizer</h2>
                 </a></li>
                 <li><a href="/Dijkstra-Visualize" class = "Dij"><h2>Dijkstra Visualizer</h2></a></li>
@@ -883,7 +880,7 @@ async function run(){
     topK = Math.max(1, Math.min(30, topK));
     topKInputEl.value = String(topK);
 
-    const res=await fetch("/run",{
+    const res=await fetch("/Grid-Pathfinding-Visualizer/run",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({grid,start,end,k:topK})
