@@ -880,7 +880,7 @@ async function run(){
     topK = Math.max(1, Math.min(30, topK));
     topKInputEl.value = String(topK);
 
-    const res=await fetch("/Grid-Pathfinding-Visualizer/run",{
+    const res=await fetch("/run",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({grid,start,end,k:topK})
